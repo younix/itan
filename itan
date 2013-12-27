@@ -1,0 +1,101 @@
+#!/bin/sh
+
+# Copyright (c) 2013 Jan Klemkow <j.klemkow@wemelug.de>
+#
+# Permission to use, copy, modify, and distribute this software for any
+# purpose with or without fee is hereby granted, provided that the above
+# copyright notice and this permission notice appear in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+export file="${HOME}/.itanlist"
+export password=""
+export openssl_param="enc -pass env:password -blowfish"
+
+function create {
+	if [ ! -e "$file" ]; then
+		echo "create itan file: $file"
+		echo "" | \
+			openssl $openssl_param -e -out $file
+	fi
+}
+
+function edit {
+	openssl $openssl_param -d -in $file | sandy -d - | \
+		openssl $openssl_param -e -out $file
+}
+
+function new_pass {
+	stty -echo
+	echo -n "new password: "
+	read new_password
+	echo
+	stty echo
+
+	openssl $openssl_param -d -in $file 2>/dev/null | \
+		openssl enc -pass env:new_password -blowfish -e -out $file
+}
+
+function show {
+	openssl $openssl_param -d -in $file 2>/dev/null | \
+		grep "^$1:[[:digit:]]"
+}
+
+args=`getopt cef: $*`
+if [ $? -ne 0 ]; then
+	echo 'Usage: itan [-f FILE] [-e]'
+	echo 'Usage: itan [-f FILE] NUMBER'
+	exit 2
+fi
+
+set -- $args
+while [ $# -ne 0 ]; do
+	case "$1" in
+	-c)
+		create_flag="$1";
+		shift;;
+	-e)
+		edit_flag="$1";
+		shift;;
+	-f)
+		file="$2";
+		shift; shift;;
+	--)
+		shift; break;;
+	esac
+done
+
+# read password for encryption of itan file blind from shell
+stty -echo
+echo -n "password: "
+read password
+echo
+stty echo
+
+if [ -n "$create_flag" ]; then
+	create
+fi
+
+if [ ! -e "$file" ]; then
+	echo "file does not exist"
+	exit 1
+fi
+
+if [ -n "$edit_flag" ]; then
+	edit
+fi
+
+if [ -n "$1" ]; then
+	show $1
+fi
+
+# destroy password in memeory
+# XXX: figure out, how to do this the right way!
+password=`printf "%100.100d" 0`
+unset password

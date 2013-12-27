@@ -1,0 +1,62 @@
+.Dd December 27, 2013
+.Dt ITAN 1
+.Os
+.Sh NAME
+.Nm itan
+.Nd tan list store
+.Sh SYNOPSIS
+.Nm
+.Op Fl f Ar FILE
+.Op Fl cep
+.Nm
+.Op Fl f Ar FILE
+.Ar NUMBER
+.Sh DESCRIPTION
+The
+.Nm
+utility stores tan lists encrypted in a file.
+For encrption
+.Xr openssl 1
+is used.
+To edit the list the editor
+.Xr sandy 1
+is used.
+The password or the tan list it self will never stored unencrypted on the file
+system.
+.Pp
+The options are as follows:
+.Bl -tag -width Ds
+.It Fl c
+Creates the itan list file.
+.It Fl e
+Decrypt the tan list file and open the whole list in
+.Xr sandy 1
+to edit this list.
+After closing the editor with CTRL + X the list will encrypt saved into the
+tan list file.
+.It Fl f Ar FILE
+Gives another path for the tan list file.
+(~/.itanlist is the default path)
+.It Fl p
+Change the password of the tan list file.
+.El
+.\" .Sh ENVIRONMENT
+.\" For sections 1, 6, 7, & 8 only.
+.Sh FILES
+.Bl -tag -width Ds
+.It ~/.itanlist
+Default path of the tan list file.
+.El
+.\" .Sh EXIT STATUS
+.\" For sections 1, 6, & 8 only.
+.Sh EXAMPLES
+Query the 12th number of the tan list.
+.Dl $ itan 12
+.Dl password:
+.Dl 12:1234
+.Sh SEE ALSO
+.Xr sandy 1
+.Xr openssl 1
+.Sh AUTHORS
+.Nm
+was written by Jan Klemkow.
